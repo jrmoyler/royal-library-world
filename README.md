@@ -43,4 +43,23 @@ npm start
 - **E2E Tests:** Comprehensive game flow and 3D interaction tests
 - **Coverage:** 94-100% on critical components
 
+## 3D Character Models
+
+The game features fully 3D character models for each class:
+
+- **Techno-Mage** 🧙‍♂️ - Cyan robed figure with floating orbs and glowing staff
+- **Cyber-Knight** ⚔️ - Teal armored warrior with photon blade
+- **Shadow Agent** 🗡️ - Purple sleek operative with energy daggers
+
+Currently using procedural models. To use custom GLB models, see `/public/models/README.md`
+
+## Features
+
+✅ Full 3D character models with animations
+✅ Class-specific appearances and weapons
+✅ Glowing emissive materials
+✅ Real-time physics with Rapier
+✅ First-person controls with visible character
+✅ Shadow casting and lighting effects
+
 *A Hataalii Production*

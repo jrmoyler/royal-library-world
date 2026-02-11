@@ -6,6 +6,7 @@ import { RigidBody, CapsuleCollider } from '@react-three/rapier';
 import type { RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { useGameStore } from '@/stores/useGameStore';
+import CharacterModel from './CharacterModels';
 
 const SPEED = 5;
 const MOUSE_SENSITIVITY = 0.002;
@@ -153,6 +154,9 @@ export default function PlayerController() {
       mass={1}
     >
       <CapsuleCollider args={[0.5, 0.3]} position={[0, 0.8, 0]} />
+
+      {/* 3D Character Model - Visible when player looks down or in third person */}
+      <CharacterModel position={[0, -0.2, 0]} rotation={[0, Math.PI, 0]} />
     </RigidBody>
   );
 }
