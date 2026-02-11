@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { RigidBody, CapsuleCollider } from '@react-three/rapier';
 import type { RapierRigidBody } from '@react-three/rapier';
@@ -9,10 +9,15 @@ import { useGameStore } from '@/stores/useGameStore';
 import CharacterModel from './CharacterModels';
 
 const SPEED = 5;
+const RUN_SPEED = 8;
 const MOUSE_SENSITIVITY = 0.002;
+const CAMERA_DISTANCE = 4;
+const CAMERA_HEIGHT = 2;
+const CAMERA_SMOOTHNESS = 0.1;
 
 export default function PlayerController() {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
+  const characterRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const depleteEnergy = useGameStore((s) => s.depleteEnergy);
   const gamePhase = useGameStore((s) => s.gamePhase);
@@ -22,10 +27,17 @@ export default function PlayerController() {
     backward: false,
     left: false,
     right: false,
+    shift: false,
   });
+
+  const [animationState, setAnimationState] = useState<'idle' | 'walk' | 'run' | 'strafe'>('idle');
+  const [movementDirection, setMovementDirection] = useState(new THREE.Vector3());
 
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const isLocked = useRef(false);
+  const cameraOffset = useRef(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE));
+  const currentCameraPosition = useRef(new THREE.Vector3());
+  const targetRotation = useRef(0);
 
   // Keyboard controls
   useEffect(() => {
@@ -36,6 +48,7 @@ export default function PlayerController() {
         case 'a': keys.current.left = true; break;
         case 'd': keys.current.right = true; break;
       }
+      if (e.key === 'Shift') keys.current.shift = true;
     };
     const onKeyUp = (e: KeyboardEvent) => {
       switch (e.key.toLowerCase()) {
@@ -44,6 +57,7 @@ export default function PlayerController() {
         case 'a': keys.current.left = false; break;
         case 'd': keys.current.right = false; break;
       }
+      if (e.key === 'Shift') keys.current.shift = false;
     };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -101,19 +115,16 @@ export default function PlayerController() {
   }, []);
 
   useFrame((_, delta) => {
-    if (!rigidBodyRef.current) return;
+    if (!rigidBodyRef.current || !characterRef.current) return;
     if (gamePhase !== 'playing') return;
 
-    // Update camera rotation
-    camera.quaternion.setFromEuler(euler.current);
+    const pos = rigidBodyRef.current.translation();
 
-    // Movement
+    // Calculate movement direction from camera perspective
     const direction = new THREE.Vector3();
-    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-    forward.y = 0;
+    const forward = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(0, euler.current.y, 0));
     forward.normalize();
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
-    right.y = 0;
+    const right = new THREE.Vector3(1, 0, 0).applyEuler(new THREE.Euler(0, euler.current.y, 0));
     right.normalize();
 
     if (keys.current.forward) direction.add(forward);
@@ -122,25 +133,86 @@ export default function PlayerController() {
     if (keys.current.left) direction.sub(right);
 
     let isMoving = false;
+    let isStrafeOnly = false;
+    const isRunning = keys.current.shift;
+
     if (direction.length() > 0) {
       direction.normalize();
       isMoving = true;
+
+      // Detect strafe-only movement (left/right without forward/backward)
+      isStrafeOnly = (keys.current.left || keys.current.right) && !(keys.current.forward || keys.current.backward);
+
+      // Smooth character rotation to face movement direction
+      if (!isStrafeOnly) {
+        targetRotation.current = Math.atan2(direction.x, direction.z);
+      } else {
+        // For strafe, keep facing camera direction
+        targetRotation.current = euler.current.y;
+      }
     }
 
-    // Apply velocity
+    // Smooth rotation interpolation
+    const currentRotation = characterRef.current.rotation.y;
+    let rotationDiff = targetRotation.current - currentRotation;
+
+    // Normalize rotation difference to [-PI, PI]
+    while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+    while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+
+    characterRef.current.rotation.y += rotationDiff * 0.15;
+
+    // Apply velocity with running
     const currentVel = rigidBodyRef.current.linvel();
+    const speed = isRunning ? RUN_SPEED : SPEED;
     rigidBodyRef.current.setLinvel(
-      { x: direction.x * SPEED, y: currentVel.y, z: direction.z * SPEED },
+      { x: direction.x * speed, y: currentVel.y, z: direction.z * speed },
       true
     );
 
-    // Update camera position
-    const pos = rigidBodyRef.current.translation();
-    camera.position.set(pos.x, pos.y + 0.8, pos.z);
+    // Update animation state
+    if (!isMoving) {
+      setAnimationState('idle');
+    } else if (isStrafeOnly) {
+      setAnimationState('strafe');
+    } else if (isRunning) {
+      setAnimationState('run');
+    } else {
+      setAnimationState('walk');
+    }
+
+    // 3rd Person Camera - smooth follow
+    const targetCameraOffset = new THREE.Vector3();
+
+    // Calculate camera position behind and above player
+    const horizontalOffset = new THREE.Vector3(0, 0, CAMERA_DISTANCE);
+    horizontalOffset.applyEuler(new THREE.Euler(0, euler.current.y, 0));
+
+    targetCameraOffset.set(
+      pos.x + horizontalOffset.x,
+      pos.y + CAMERA_HEIGHT,
+      pos.z + horizontalOffset.z
+    );
+
+    // Smooth camera movement
+    if (!currentCameraPosition.current.x && !currentCameraPosition.current.y && !currentCameraPosition.current.z) {
+      currentCameraPosition.current.copy(targetCameraOffset);
+    } else {
+      currentCameraPosition.current.lerp(targetCameraOffset, CAMERA_SMOOTHNESS);
+    }
+
+    camera.position.copy(currentCameraPosition.current);
+
+    // Camera looks at player position (slightly above)
+    const lookAtTarget = new THREE.Vector3(pos.x, pos.y + 1.2, pos.z);
+    camera.lookAt(lookAtTarget);
+
+    // Store movement direction for character animations
+    setMovementDirection(direction.clone());
 
     // Deplete energy while moving
     if (isMoving) {
-      depleteEnergy(delta * 2);
+      depleteEnergy(delta * (isRunning ? 3 : 2));
     }
   });
 
@@ -155,8 +227,14 @@ export default function PlayerController() {
     >
       <CapsuleCollider args={[0.5, 0.3]} position={[0, 0.8, 0]} />
 
-      {/* 3D Character Model - Visible when player looks down or in third person */}
-      <CharacterModel position={[0, -0.2, 0]} rotation={[0, Math.PI, 0]} />
+      {/* 3D Character Model - Now visible in third person */}
+      <group ref={characterRef}>
+        <CharacterModel
+          position={[0, 0, 0]}
+          animationState={animationState}
+          movementDirection={movementDirection}
+        />
+      </group>
     </RigidBody>
   );
 }
