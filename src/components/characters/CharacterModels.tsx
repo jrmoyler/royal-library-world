@@ -839,9 +839,9 @@ export default function CharacterModel(props: CharacterModelProps) {
   switch (playerClass) {
     case 'techno-mage':
       return <TechnoMageModel {...props} />;
-    case 'cyber-knight':
+    case 'data-knight':
       return <CyberKnightModel {...props} />;
-    case 'shadow-agent':
+    case 'cipher-rogue':
       return <ShadowAgentModel {...props} />;
     default:
       return null;
