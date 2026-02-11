@@ -12,12 +12,23 @@ export interface BookData {
   discovered: boolean;
 }
 
+// Character stats for each class
+export interface CharacterStats {
+  str: number; // Strength
+  dex: number; // Dexterity
+  int: number; // Intelligence
+}
+
+// Character class type
+export type CharacterClass = 'techno-mage' | 'data-knight' | 'cipher-rogue';
+
 export interface GameState {
   // Player state
   energy: number;
   maxEnergy: number;
-  playerClass: 'techno-mage' | 'cyber-knight' | 'shadow-agent' | null;
+  playerClass: CharacterClass | null;
   playerName: string;
+  playerStats: CharacterStats | null;
 
   // Game state
   gamePhase: 'title' | 'character-select' | 'playing' | 'reading';
@@ -33,7 +44,7 @@ export interface GameState {
 
   // Actions
   setGamePhase: (phase: GameState['gamePhase']) => void;
-  selectClass: (cls: GameState['playerClass']) => void;
+  selectClass: (cls: CharacterClass, stats: CharacterStats) => void;
   setPlayerName: (name: string) => void;
   depleteEnergy: (amount: number) => void;
   restoreEnergy: (amount: number) => void;
@@ -135,6 +146,7 @@ export const useGameStore = create<GameState>((set) => ({
   maxEnergy: 100,
   playerClass: null,
   playerName: 'Wanderer',
+  playerStats: null,
 
   gamePhase: 'title',
   discoveredBooks: [],
@@ -148,7 +160,7 @@ export const useGameStore = create<GameState>((set) => ({
 
   setGamePhase: (phase) => set({ gamePhase: phase }),
 
-  selectClass: (cls) => set({ playerClass: cls }),
+  selectClass: (cls, stats) => set({ playerClass: cls, playerStats: stats }),
 
   setPlayerName: (name) => set({ playerName: name }),
 
@@ -189,11 +201,12 @@ export const useGameStore = create<GameState>((set) => ({
     set({
       energy: 100,
       playerClass: null,
+      playerStats: null,
       gamePhase: 'title',
       discoveredBooks: [],
       activeBook: null,
       nearbyArtifact: null,
-      showMinimap: false, // Reset minimap state on game reset
+      showMinimap: false,
       books: PORTFOLIO_BOOKS.map((b) => ({ ...b, discovered: false })),
     }),
 }));
