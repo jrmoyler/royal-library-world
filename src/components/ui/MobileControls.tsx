@@ -34,6 +34,9 @@ export default function MobileControls() {
 
   // Detect mobile device
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+
     const checkMobile = () => {
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
@@ -107,21 +110,23 @@ export default function MobileControls() {
     if (normalizedX > 0.2) newKeys.add('KeyD');
     if (distance > maxDistance * 0.7) newKeys.add('ShiftLeft');
 
-    // Update keyboard state
-    newKeys.forEach(key => {
-      if (!keysPressed.current.has(key)) {
-        keysPressed.current.add(key);
-        window.dispatchEvent(new KeyboardEvent('keydown', { code: key }));
-      }
-    });
+    // Update keyboard state (only on client)
+    if (typeof window !== 'undefined') {
+      newKeys.forEach(key => {
+        if (!keysPressed.current.has(key)) {
+          keysPressed.current.add(key);
+          window.dispatchEvent(new KeyboardEvent('keydown', { code: key }));
+        }
+      });
 
-    // Release keys that are no longer pressed
-    keysPressed.current.forEach(key => {
-      if (!newKeys.has(key)) {
-        keysPressed.current.delete(key);
-        window.dispatchEvent(new KeyboardEvent('keyup', { code: key }));
-      }
-    });
+      // Release keys that are no longer pressed
+      keysPressed.current.forEach(key => {
+        if (!newKeys.has(key)) {
+          keysPressed.current.delete(key);
+          window.dispatchEvent(new KeyboardEvent('keyup', { code: key }));
+        }
+      });
+    }
   };
 
   const handleJoystickEnd = (e: React.TouchEvent) => {
@@ -140,20 +145,24 @@ export default function MobileControls() {
 
     touchIdRef.current = null;
 
-    // Release all keys
-    keysPressed.current.forEach(key => {
-      window.dispatchEvent(new KeyboardEvent('keyup', { code: key }));
-    });
-    keysPressed.current.clear();
+    // Release all keys (only on client)
+    if (typeof window !== 'undefined') {
+      keysPressed.current.forEach(key => {
+        window.dispatchEvent(new KeyboardEvent('keyup', { code: key }));
+      });
+      keysPressed.current.clear();
+    }
   };
 
   // Action button handler
   const handleInteract = () => {
-    // Simulate 'E' key press for interaction
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }));
-    setTimeout(() => {
-      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }));
-    }, 100);
+    // Simulate 'E' key press for interaction (only on client)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }));
+      setTimeout(() => {
+        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }));
+      }, 100);
+    }
   };
 
   if (!isMobile) return null;

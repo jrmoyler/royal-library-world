@@ -31,8 +31,8 @@ copy_model "$SOURCE_DIR/castle interior 3d model.glb" "castle-interior.glb"
 copy_model "$SOURCE_DIR/castle-interior.glb" "castle-interior.glb"
 
 # Copy character models
-copy_model "$SOURCE_DIR/futuristic avatar 3d model.glb" "futuristic-avatar.glb"
-copy_model "$SOURCE_DIR/futuristic-avatar.glb" "futuristic-avatar.glb"
+copy_model "$SOURCE_DIR/dual-wield assassin 3d model.glb" "dual-wield-assassin.glb"
+copy_model "$SOURCE_DIR/dual-wield-assassin.glb" "dual-wield-assassin.glb"
 
 copy_model "$SOURCE_DIR/futuristic knight 3d model.glb" "futuristic-knight.glb"
 copy_model "$SOURCE_DIR/futuristic-knight.glb" "futuristic-knight.glb"
