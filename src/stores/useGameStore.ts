@@ -193,6 +193,7 @@ export const useGameStore = create<GameState>((set) => ({
       discoveredBooks: [],
       activeBook: null,
       nearbyArtifact: null,
+      showMinimap: false, // Reset minimap state on game reset
       books: PORTFOLIO_BOOKS.map((b) => ({ ...b, discovered: false })),
     }),
 }));
