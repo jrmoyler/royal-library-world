@@ -864,7 +864,7 @@ function GLBModelWrapper({
   useEffect(() => {
     // Check if GLB model exists
     const modelPaths = {
-      'cipher-rogue': '/models/futuristic-avatar.glb',
+      'cipher-rogue': '/models/dual-wield-assassin.glb',
       'data-knight': '/models/futuristic-knight.glb',
       'techno-mage': '/models/futuristic-armored-wizard.glb',
     };

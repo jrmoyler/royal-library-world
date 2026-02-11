@@ -15,9 +15,9 @@ export const MODEL_PATHS = {
   castleInterior: '/models/castle-interior.glb',
 
   // Characters
-  cipherRogue: '/models/futuristic-avatar.glb',
-  dataKnight: '/models/futuristic-knight.glb',
-  technoMage: '/models/futuristic-armored-wizard.glb',
+  cipherRogue: '/models/dual-wield-assassin.glb', // Cipher-Rogue (dual daggers)
+  dataKnight: '/models/futuristic-knight.glb',    // Data-Knight (dual blades)
+  technoMage: '/models/futuristic-armored-wizard.glb', // Techno-Mage (staff)
 
   // Collectibles
   enchantedBook: '/models/enchanted-book.glb',

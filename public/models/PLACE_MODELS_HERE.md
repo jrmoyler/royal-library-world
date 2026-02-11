@@ -8,7 +8,7 @@ Place your GLB model files here with the following **exact** file names:
 - `castle-interior.glb` - Castle/library interior environment
 
 ### 👥 Characters
-- `futuristic-avatar.glb` - **Cipher-Rogue** character (dual daggers)
+- `dual-wield-assassin.glb` - **Cipher-Rogue** character (dual daggers)
 - `futuristic-knight.glb` - **Data-Knight** character (dual blades)
 - `futuristic-armored-wizard.glb` - **Techno-Mage** character (cipher staff)
 

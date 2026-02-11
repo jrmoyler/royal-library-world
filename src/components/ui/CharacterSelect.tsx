@@ -2,6 +2,13 @@
 
 import { useGameStore, type CharacterStats } from '@/stores/useGameStore';
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to avoid SSR issues with 3D
+const Character3DPreview = dynamic(
+  () => import('./Character3DPreview'),
+  { ssr: false }
+);
 
 interface CharacterClass {
   id: 'cipher-rogue' | 'data-knight' | 'techno-mage';
@@ -206,14 +213,16 @@ export default function CharacterSelect() {
                   pointerEvents: 'none',
                 }} />
 
-                {/* Character Icon */}
+                {/* Character 3D Preview */}
                 <div style={{
-                  fontSize: '4rem',
-                  textAlign: 'center',
                   marginBottom: '1.5rem',
-                  filter: `drop-shadow(0 0 20px ${cls.color})`,
                 }}>
-                  {cls.icon}
+                  <Character3DPreview
+                    characterClass={cls.id}
+                    color={cls.color}
+                    isSelected={isSelected}
+                    isHovered={isHovered}
+                  />
                 </div>
 
                 {/* Character Name */}
