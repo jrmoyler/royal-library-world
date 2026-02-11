@@ -1,0 +1,64 @@
+:root {
+  /* HSL-based design tokens - Cyber Medieval palette */
+  --hue-primary: 187;
+  --hue-accent: 160;
+  --hue-warning: 45;
+  --hue-danger: 0;
+
+  /* Core colors */
+  --color-cyan: hsl(187, 100%, 50%);
+  --color-cyan-dim: hsl(187, 80%, 30%);
+  --color-cyan-glow: hsl(187, 100%, 60%);
+  --color-teal: hsl(160, 100%, 42%);
+  --color-gold: hsl(45, 100%, 50%);
+  --color-ember: hsl(20, 90%, 50%);
+
+  /* Surface colors */
+  --surface-stone: hsl(220, 10%, 12%);
+  --surface-stone-light: hsl(220, 10%, 18%);
+  --surface-glass: hsla(187, 40%, 15%, 0.7);
+  --surface-glass-hover: hsla(187, 40%, 20%, 0.8);
+  --surface-overlay: hsla(220, 20%, 5%, 0.85);
+
+  /* Text */
+  --text-primary: hsl(0, 0%, 92%);
+  --text-secondary: hsl(187, 30%, 70%);
+  --text-muted: hsl(220, 10%, 50%);
+
+  /* Borders */
+  --border-circuit: 1px solid hsla(187, 100%, 50%, 0.3);
+  --border-circuit-active: 1px solid hsla(187, 100%, 50%, 0.7);
+  --border-stone: 1px solid hsla(220, 10%, 30%, 0.5);
+
+  /* Spacing - 8pt grid */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+  --space-10: 80px;
+
+  /* Typography */
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* Font weights */
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Shadows & Glows */
+  --glow-cyan: 0 0 20px hsla(187, 100%, 50%, 0.4), 0 0 60px hsla(187, 100%, 50%, 0.1);
+  --glow-cyan-strong: 0 0 30px hsla(187, 100%, 50%, 0.6), 0 0 80px hsla(187, 100%, 50%, 0.2);
+  --shadow-stone: 0 4px 24px hsla(0, 0%, 0%, 0.5);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 600ms ease;
+}
