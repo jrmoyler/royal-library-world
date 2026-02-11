@@ -6,6 +6,7 @@ import TitleScreen from '@/components/ui/TitleScreen';
 import CharacterSelect from '@/components/ui/CharacterSelect';
 import HUD from '@/components/ui/HUD';
 import BookReader from '@/components/ui/BookReader';
+import MobileControls from '@/components/ui/MobileControls';
 
 // Dynamic import for the 3D scene to avoid SSR issues
 const Scene = dynamic(() => import('@/components/game/Scene'), {
@@ -36,6 +37,7 @@ export default function GameWrapper() {
         <>
           <Scene />
           <HUD />
+          <MobileControls />
           {gamePhase === 'reading' && <BookReader />}
         </>
       )}

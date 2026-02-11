@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, ReactElement } from 'react';
+import { useRef, ReactElement, Suspense, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
+import { CastleInteriorModel } from '@/components/models/ModelLoader';
 
 /**
  * Enhanced Isometric Castle Library Environment
@@ -682,11 +683,96 @@ function CastleLibrary() {
   );
 }
 
-// Main export component
-export default function LibraryEnvironment() {
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <mesh position={[0, 2, 0]}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial
+        color="#00f0ff"
+        emissive="#00f0ff"
+        emissiveIntensity={0.5}
+        wireframe
+      />
+    </mesh>
+  );
+}
+
+// Castle GLB Model with error boundary
+function CastleGLBModel() {
+  const [modelError, setModelError] = useState(false);
+
+  useEffect(() => {
+    // Check if model file exists
+    fetch('/models/castle-interior.glb', { method: 'HEAD' })
+      .then(response => {
+        if (!response.ok) {
+          setModelError(true);
+        }
+      })
+      .catch(() => {
+        setModelError(true);
+      });
+  }, []);
+
+  if (modelError) {
+    // Fallback to procedural castle if GLB not found
+    return <CastleLibrary />;
+  }
+
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <group>
+        {/* Castle Interior GLB Model */}
+        <CastleInteriorModel
+          position={[0, 0, 0]}
+          scale={1}
+        />
+
+        {/* Keep procedural elements (bookshelves, beam, screens, desks) */}
+        <ProceduralElements />
+      </group>
+    </Suspense>
+  );
+}
+
+// Procedural elements to complement or replace GLB
+function ProceduralElements() {
   return (
     <group>
-      <CastleLibrary />
+      {/* Central glowing beam */}
+      <CentralBeam position={[0, 0, 0]} />
+
+      {/* Holographic screens */}
+      <HolographicScreen position={[-5, 3, -6]} rotation={[0, Math.PI / 4, 0]} text="PROJECTS" />
+      <HolographicScreen position={[5, 3.5, -6]} rotation={[0, -Math.PI / 4, 0]} text="SKILLS" />
+      <HolographicScreen position={[-6, 3.2, 5]} rotation={[0, Math.PI / 3, 0]} text="DATA" />
+      <HolographicScreen position={[6, 3.3, 5]} rotation={[0, -Math.PI / 3, 0]} text="CODE" />
+
+      {/* Reading desks */}
+      <ReadingDesk position={[-3, 0, 2]} rotation={[0, Math.PI / 6, 0]} />
+      <ReadingDesk position={[3, 0, 2]} rotation={[0, -Math.PI / 6, 0]} />
+      <ReadingDesk position={[-4, 0, -3]} rotation={[0, Math.PI / 4, 0]} />
+      <ReadingDesk position={[4, 0, -3]} rotation={[0, -Math.PI / 4, 0]} />
+    </group>
+  );
+}
+
+// Main export component with GLB support
+export default function LibraryEnvironment() {
+  const [useGLB, setUseGLB] = useState(true);
+
+  return (
+    <group>
+      {/* Use GLB model if available, otherwise use procedural */}
+      {useGLB ? (
+        <CastleGLBModel />
+      ) : (
+        <>
+          <CastleLibrary />
+          <ProceduralElements />
+        </>
+      )}
 
       {/* Ambient lighting */}
       <ambientLight intensity={0.2} color="#8899aa" />
