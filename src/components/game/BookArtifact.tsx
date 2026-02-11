@@ -38,7 +38,7 @@ export default function BookArtifact({ book, position, rotation = [0, 0, 0] }: B
   }, [nearbyArtifact, book, isDiscovered, discoverBook, setActiveBook]);
 
   // Create particle geometry
-  const particlePositions = useRef<Float32Array>();
+  const particlePositions = useRef<Float32Array | null>(null);
   if (!particlePositions.current) {
     const count = 20;
     const arr = new Float32Array(count * 3);

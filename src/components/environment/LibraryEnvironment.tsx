@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, ReactElement } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
@@ -43,7 +43,7 @@ function StoneWall({
 }
 
 function Bookshelf({ position, rotation = [0, 0, 0] }: { position: [number, number, number]; rotation?: [number, number, number] }) {
-  const books: JSX.Element[] = [];
+  const books: ReactElement[] = [];
   const colors = ['#5c3d2e', '#4a2d1e', '#3d4a5c', '#2e3d2e', '#5c2e3d', '#4a4a5c'];
 
   for (let shelf = 0; shelf < 4; shelf++) {
