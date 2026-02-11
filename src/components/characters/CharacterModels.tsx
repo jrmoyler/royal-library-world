@@ -1,28 +1,44 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, Suspense, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '@/stores/useGameStore';
+import { CharacterModel as GLBCharacterModel } from '@/components/models/ModelLoader';
 
 /**
- * Enhanced 3D Character Models with Natural Animations
+ * Enhanced 3D Character Models with GLB Support
  *
- * Based on high-quality reference images with detailed armor, weapons, and effects.
+ * AUTOMATICALLY DETECTS GLB MODELS:
+ * - If GLB model exists: Uses high-quality GLB model
+ * - If GLB missing: Falls back to procedural geometry
+ * - Seamless switching between both modes
  *
- * To use GLB models instead (RECOMMENDED for production):
- * 1. Place your GLB files in /public/models/ (e.g., techno-mage.glb, cyber-knight.glb)
- * 2. Import: import { useGLTF, useAnimations } from '@react-three/drei'
- * 3. Replace the procedural model with:
- *    const { scene, animations } = useGLTF('/models/techno-mage.glb')
- *    const { actions } = useAnimations(animations, groupRef)
- * 4. Play animations based on state: actions[animationState]?.play()
- *
- * See /public/models/README.md for detailed GLB setup instructions
+ * GLB Files Expected in /public/models/:
+ * - futuristic-avatar.glb (Cipher-Rogue)
+ * - futuristic-knight.glb (Data-Knight)
+ * - futuristic-armored-wizard.glb (Techno-Mage)
  */
+
+// Loading fallback for GLB models
+function CharacterLoadingFallback() {
+  return (
+    <mesh position={[0, 1, 0]}>
+      <capsuleGeometry args={[0.3, 1, 8, 16]} />
+      <meshStandardMaterial
+        color="#00f0ff"
+        emissive="#00f0ff"
+        emissiveIntensity={0.5}
+        wireframe
+      />
+    </mesh>
+  );
+}
 
 interface CharacterModelProps {
   position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
   animationState?: 'idle' | 'walk' | 'run' | 'strafe';
   movementDirection?: THREE.Vector3;
 }
@@ -829,21 +845,84 @@ export function ShadowAgentModel({
 }
 
 /**
+ * GLB Model Wrapper with Fallback
+ * Attempts to load GLB, falls back to procedural on error
+ */
+function GLBModelWrapper({
+  characterClass,
+  proceduralComponent,
+  ...props
+}: CharacterModelProps & {
+  characterClass: 'cipher-rogue' | 'data-knight' | 'techno-mage';
+  proceduralComponent: React.ComponentType<CharacterModelProps>;
+}) {
+  const [hasGLB, setHasGLB] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  const ProceduralComponent = proceduralComponent;
+
+  useEffect(() => {
+    // Check if GLB model exists
+    const modelPaths = {
+      'cipher-rogue': '/models/futuristic-avatar.glb',
+      'data-knight': '/models/futuristic-knight.glb',
+      'techno-mage': '/models/futuristic-armored-wizard.glb',
+    };
+
+    fetch(modelPaths[characterClass], { method: 'HEAD' })
+      .then(response => {
+        setHasGLB(response.ok);
+        setChecked(true);
+      })
+      .catch(() => {
+        setHasGLB(false);
+        setChecked(true);
+      });
+  }, [characterClass]);
+
+  if (!checked) {
+    return <CharacterLoadingFallback />;
+  }
+
+  if (hasGLB) {
+    return (
+      <Suspense fallback={<CharacterLoadingFallback />}>
+        <GLBCharacterModel
+          characterClass={characterClass}
+          position={props.position}
+          rotation={props.rotation || [0, 0, 0]}
+          scale={1}
+        />
+      </Suspense>
+    );
+  }
+
+  // Fallback to procedural model
+  return <ProceduralComponent {...props} />;
+}
+
+/**
  * Main Character Model component that switches based on player class
+ * AUTOMATICALLY USES GLB IF AVAILABLE, OTHERWISE USES PROCEDURAL
  */
 export default function CharacterModel(props: CharacterModelProps) {
   const playerClass = useGameStore((s) => s.playerClass);
 
   if (!playerClass) return null;
 
-  switch (playerClass) {
-    case 'techno-mage':
-      return <TechnoMageModel {...props} />;
-    case 'data-knight':
-      return <CyberKnightModel {...props} />;
-    case 'cipher-rogue':
-      return <ShadowAgentModel {...props} />;
-    default:
-      return null;
-  }
+  const classMap = {
+    'techno-mage': TechnoMageModel,
+    'data-knight': CyberKnightModel,
+    'cipher-rogue': ShadowAgentModel,
+  } as const;
+
+  const ProceduralComponent = classMap[playerClass];
+
+  return (
+    <GLBModelWrapper
+      characterClass={playerClass}
+      proceduralComponent={ProceduralComponent}
+      {...props}
+    />
+  );
 }

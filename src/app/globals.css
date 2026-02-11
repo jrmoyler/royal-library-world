@@ -66,3 +66,49 @@ html, body {
 
 canvas { cursor: crosshair; }
 button { border-radius: 0; }
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    position: fixed;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Disable pull-to-refresh */
+  body {
+    overscroll-behavior: none;
+  }
+
+  /* Touch-friendly button sizes */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Hide cursor on mobile canvas */
+  canvas {
+    cursor: none;
+    touch-action: none;
+  }
+}
+
+/* Performance optimizations */
+* {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Smooth animations on all devices */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
