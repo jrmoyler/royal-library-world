@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, ReactElement, Suspense, useState, useEffect } from 'react';
+import { useRef, useMemo, ReactElement, Suspense, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
@@ -129,6 +129,12 @@ function CastleWall({
   );
 }
 
+// Deterministic pseudo-random based on seed — avoids Math.random() in render
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 // Enhanced bookshelf with glowing books
 function DetailedBookshelf({
   position,
@@ -137,61 +143,65 @@ function DetailedBookshelf({
   position: [number, number, number];
   rotation?: [number, number, number];
 }) {
-  const books: ReactElement[] = [];
+  // Use useMemo with deterministic seed so books are stable across re-renders
+  const books = useMemo(() => {
+    const result: ReactElement[] = [];
+    const seed = position[0] * 1000 + position[2] * 100;
 
-  // Generate books with some glowing
-  for (let shelf = 0; shelf < 5; shelf++) {
-    for (let b = 0; b < 8; b++) {
-      const h = 0.18 + Math.random() * 0.12;
-      const w = 0.05 + Math.random() * 0.03;
-      const isGlowing = Math.random() > 0.7; // 30% chance of glowing book
-      const bookColor = isGlowing ? '#00f0ff' : ['#5c3d2e', '#4a2d1e', '#3d4a5c', '#2e3d2e'][Math.floor(Math.random() * 4)];
+    for (let shelf = 0; shelf < 5; shelf++) {
+      for (let b = 0; b < 8; b++) {
+        const idx = shelf * 8 + b;
+        const h = 0.18 + seededRandom(seed + idx * 4) * 0.12;
+        const w = 0.05 + seededRandom(seed + idx * 4 + 1) * 0.03;
+        const isGlowing = seededRandom(seed + idx * 4 + 2) > 0.7;
+        const bookColor = isGlowing ? '#00f0ff' : ['#5c3d2e', '#4a2d1e', '#3d4a5c', '#2e3d2e'][Math.floor(seededRandom(seed + idx * 4 + 3) * 4)];
 
-      books.push(
-        <mesh
-          key={`${shelf}-${b}`}
-          position={[
-            -0.42 + b * 0.11,
-            0.2 + shelf * 0.35,
-            0.08,
-          ]}
-          castShadow
-        >
-          <boxGeometry args={[w, h, 0.12]} />
-          <meshStandardMaterial
-            color={bookColor}
-            emissive={isGlowing ? '#00f0ff' : '#000000'}
-            emissiveIntensity={isGlowing ? 0.6 : 0}
-            roughness={0.8}
-          />
-        </mesh>
-      );
-
-      // Glowing spine for data books
-      if (isGlowing) {
-        books.push(
+        result.push(
           <mesh
-            key={`spine-${shelf}-${b}`}
+            key={`${shelf}-${b}`}
             position={[
               -0.42 + b * 0.11,
               0.2 + shelf * 0.35,
-              0.14,
+              0.08,
             ]}
+            castShadow
           >
-            <planeGeometry args={[w - 0.01, h - 0.02]} />
+            <boxGeometry args={[w, h, 0.12]} />
             <meshStandardMaterial
-              color="#00f0ff"
-              emissive="#00f0ff"
-              emissiveIntensity={1}
-              transparent
-              opacity={0.5}
-              toneMapped={false}
+              color={bookColor}
+              emissive={isGlowing ? '#00f0ff' : '#000000'}
+              emissiveIntensity={isGlowing ? 0.6 : 0}
+              roughness={0.8}
             />
           </mesh>
         );
+
+        if (isGlowing) {
+          result.push(
+            <mesh
+              key={`spine-${shelf}-${b}`}
+              position={[
+                -0.42 + b * 0.11,
+                0.2 + shelf * 0.35,
+                0.14,
+              ]}
+            >
+              <planeGeometry args={[w - 0.01, h - 0.02]} />
+              <meshStandardMaterial
+                color="#00f0ff"
+                emissive="#00f0ff"
+                emissiveIntensity={1}
+                transparent
+                opacity={0.5}
+                toneMapped={false}
+              />
+            </mesh>
+          );
+        }
       }
     }
-  }
+    return result;
+  }, [position]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -332,7 +342,8 @@ function CentralBeam({ position }: { position: [number, number, number] }) {
 function HolographicScreen({
   position,
   rotation = [0, 0, 0],
-  text = 'DATA'
+  // text parameter reserved for future holographic display content
+  text: _text = 'DATA'
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
@@ -760,7 +771,7 @@ function ProceduralElements() {
 
 // Main export component with GLB support
 export default function LibraryEnvironment() {
-  const [useGLB, setUseGLB] = useState(true);
+  const [useGLB, _setUseGLB] = useState(true);
 
   return (
     <group>

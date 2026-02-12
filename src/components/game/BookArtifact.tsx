@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Float } from '@react-three/drei';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
@@ -53,18 +53,25 @@ export default function BookArtifact({ book, position, rotation = [0, 0, 0] }: B
     return () => window.removeEventListener('keydown', handleKey);
   }, [nearbyArtifact, book, isDiscovered, discoverBook, setActiveBook]);
 
-  // Create particle geometry
-  const particlePositions = useRef<Float32Array | null>(null);
-  if (!particlePositions.current) {
+  // Create particle geometry — computed once per mount via useMemo
+  const particlePositions = useMemo(() => {
     const count = 30;
     const arr = new Float32Array(count * 3);
+    // Use deterministic seed based on position for stable rendering
+    const seed = position[0] * 100 + position[2] * 10;
     for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 1.8;
-      arr[i * 3 + 1] = Math.random() * 2.5;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 1.8;
+      const s = Math.sin(seed + i) * 10000;
+      const r = s - Math.floor(s);
+      const s2 = Math.sin(seed + i + 100) * 10000;
+      const r2 = s2 - Math.floor(s2);
+      const s3 = Math.sin(seed + i + 200) * 10000;
+      const r3 = s3 - Math.floor(s3);
+      arr[i * 3] = (r - 0.5) * 1.8;
+      arr[i * 3 + 1] = r2 * 2.5;
+      arr[i * 3 + 2] = (r3 - 0.5) * 1.8;
     }
-    particlePositions.current = arr;
-  }
+    return arr;
+  }, [position]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -92,7 +99,7 @@ export default function BookArtifact({ book, position, rotation = [0, 0, 0] }: B
     }
 
     // Particles float upward and rotate
-    if (particlesRef.current && particlePositions.current) {
+    if (particlesRef.current && particlePositions) {
       const geo = particlesRef.current.geometry;
       const posAttr = geo.getAttribute('position');
       for (let i = 0; i < posAttr.count; i++) {
@@ -361,7 +368,7 @@ export default function BookArtifact({ book, position, rotation = [0, 0, 0] }: B
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            args={[particlePositions.current!, 3]}
+            args={[particlePositions!, 3]}
           />
         </bufferGeometry>
         <pointsMaterial

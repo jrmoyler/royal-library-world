@@ -84,7 +84,7 @@ export function CharacterModel({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
-  animation = 'idle',
+  animation: _animation = 'idle',
 }: {
   characterClass: 'cipher-rogue' | 'data-knight' | 'techno-mage';
   position?: [number, number, number];
@@ -98,7 +98,7 @@ export function CharacterModel({
     'techno-mage': MODEL_PATHS.technoMage,
   }[characterClass];
 
-  const { scene, animations } = useGLTF(modelPath);
+  const { scene, animations: _animations } = useGLTF(modelPath);
 
   useEffect(() => {
     // Set up shadows and materials

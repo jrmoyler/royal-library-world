@@ -38,6 +38,16 @@ global.IntersectionObserver = class IntersectionObserver {
   unobserve() {}
 }
 
+// Mock ResizeObserver — required by @react-three/fiber Canvas
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Mock WebGL context for Three.js
 HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
   canvas: document.createElement('canvas'),
