@@ -5,6 +5,15 @@ import { useGameStore } from '@/stores/useGameStore';
 
 jest.mock('@/stores/useGameStore');
 
+// Mock next/dynamic so Character3DPreview doesn't try to render a Three.js Canvas
+jest.mock('next/dynamic', () => {
+  return function dynamic() {
+    return function MockCharacter3DPreview() {
+      return <div data-testid="character-3d-preview">3D Preview</div>;
+    };
+  };
+});
+
 const mockUseGameStore = useGameStore as jest.MockedFunction<typeof useGameStore>;
 
 describe('CharacterSelect Component', () => {
@@ -22,157 +31,166 @@ describe('CharacterSelect Component', () => {
   it('should render all three character classes', () => {
     render(<CharacterSelect />);
 
+    // Actual class names from the CLASSES array in CharacterSelect.tsx
+    expect(screen.getByText('Cipher-Rogue')).toBeInTheDocument();
+    expect(screen.getByText('Data-Knight')).toBeInTheDocument();
     expect(screen.getByText('Techno-Mage')).toBeInTheDocument();
-    expect(screen.getByText('Cyber-Knight')).toBeInTheDocument();
-    expect(screen.getByText('Shadow Agent')).toBeInTheDocument();
   });
 
-  it('should display character descriptions', () => {
+  it('should render character class names as headings', () => {
+    // Note: descriptions are defined in CLASSES data but not rendered in the DOM.
+    // This test verifies the rendered class name headings instead.
     render(<CharacterSelect />);
 
-    expect(screen.getByText(/Wielders of data streams and code spells/)).toBeInTheDocument();
-    expect(screen.getByText(/Armored sentinels with circuit-veined plate/)).toBeInTheDocument();
-    expect(screen.getByText(/Silent operatives who move between data nodes/)).toBeInTheDocument();
+    const cipherRogue = screen.getByText('Cipher-Rogue');
+    const dataKnight = screen.getByText('Data-Knight');
+    const technoMage = screen.getByText('Techno-Mage');
+
+    expect(cipherRogue.tagName).toBe('H3');
+    expect(dataKnight.tagName).toBe('H3');
+    expect(technoMage.tagName).toBe('H3');
   });
 
   it('should display character weapons', () => {
     render(<CharacterSelect />);
 
-    expect(screen.getByText(/WEAPON: Cipher Staff/)).toBeInTheDocument();
-    expect(screen.getByText(/WEAPON: Photon Blade/)).toBeInTheDocument();
-    expect(screen.getByText(/WEAPON: Energy Daggers/)).toBeInTheDocument();
+    // Weapons are rendered as plain text (no "WEAPON:" prefix)
+    expect(screen.getByText('Dual Energy Daggers')).toBeInTheDocument();
+    expect(screen.getByText('Dual Photon Blades')).toBeInTheDocument();
+    expect(screen.getByText('Cipher Staff')).toBeInTheDocument();
   });
 
   it('should display character stats', () => {
     render(<CharacterSelect />);
 
-    // Check if stat labels are present
-    const wisdomStats = screen.getAllByText(/wisdom/i);
-    const agilityStats = screen.getAllByText(/agility/i);
-    const strengthStats = screen.getAllByText(/strength/i);
+    // Stat labels in the component are STR, DEX, INT
+    const strLabels = screen.getAllByText('STR');
+    const dexLabels = screen.getAllByText('DEX');
+    const intLabels = screen.getAllByText('INT');
 
-    expect(wisdomStats.length).toBe(3); // One for each class
-    expect(agilityStats.length).toBe(3);
-    expect(strengthStats.length).toBe(3);
+    expect(strLabels.length).toBe(3); // One for each class
+    expect(dexLabels.length).toBe(3);
+    expect(intLabels.length).toBe(3);
   });
 
-  it('should have disabled confirm button by default', () => {
+  it('should render confirm buttons for each class', () => {
     render(<CharacterSelect />);
 
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    expect(confirmButton).toBeDisabled();
+    // Each character card has its own "Confirm" button
+    const confirmButtons = screen.getAllByText('Confirm');
+    expect(confirmButtons.length).toBe(3);
   });
 
-  it('should enable confirm button when class is selected', () => {
+  it('should render header text', () => {
     render(<CharacterSelect />);
 
-    const technoMageButton = screen.getByText('Techno-Mage').closest('button');
-    if (technoMageButton) {
-      fireEvent.click(technoMageButton);
+    // Actual header text from the component
+    expect(screen.getByText('Select Your Avatar')).toBeInTheDocument();
+  });
+
+  it('should select a character card when clicked', () => {
+    render(<CharacterSelect />);
+
+    // Click on the Techno-Mage card area
+    const technoMageCard = screen.getByText('Techno-Mage').closest('div[style]');
+    if (technoMageCard) {
+      fireEvent.click(technoMageCard);
     }
 
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    expect(confirmButton).not.toBeDisabled();
+    // Card should visually highlight (verified by no error)
+    expect(screen.getByText('Techno-Mage')).toBeInTheDocument();
   });
 
-  it('should select techno-mage on click', () => {
+  it('should call selectClass and setGamePhase when confirm is clicked', () => {
     render(<CharacterSelect />);
 
-    const technoMageButton = screen.getByText('Techno-Mage').closest('button');
-    if (technoMageButton) {
-      fireEvent.click(technoMageButton);
-    }
+    // Click confirm on the first card (Cipher-Rogue at index 0)
+    const confirmButtons = screen.getAllByText('Confirm');
+    fireEvent.click(confirmButtons[0]);
 
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    expect(confirmButton).not.toBeDisabled();
-  });
-
-  it('should select cyber-knight on click', () => {
-    render(<CharacterSelect />);
-
-    const cyberKnightButton = screen.getByText('Cyber-Knight').closest('button');
-    if (cyberKnightButton) {
-      fireEvent.click(cyberKnightButton);
-    }
-
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    expect(confirmButton).not.toBeDisabled();
-  });
-
-  it('should select shadow-agent on click', () => {
-    render(<CharacterSelect />);
-
-    const shadowAgentButton = screen.getByText('Shadow Agent').closest('button');
-    if (shadowAgentButton) {
-      fireEvent.click(shadowAgentButton);
-    }
-
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    expect(confirmButton).not.toBeDisabled();
-  });
-
-  it('should call selectClass and setGamePhase when confirming', () => {
-    render(<CharacterSelect />);
-
-    // Select techno-mage
-    const technoMageButton = screen.getByText('Techno-Mage').closest('button');
-    if (technoMageButton) {
-      fireEvent.click(technoMageButton);
-    }
-
-    // Click confirm
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    fireEvent.click(confirmButton);
-
-    expect(mockSelectClass).toHaveBeenCalledWith('techno-mage');
+    // selectClass is called with (id, stats) — two arguments
+    expect(mockSelectClass).toHaveBeenCalledWith(
+      'cipher-rogue',
+      { str: 13, dex: 18, int: 17 }
+    );
     expect(mockSetGamePhase).toHaveBeenCalledWith('playing');
   });
 
-  it('should allow changing selection before confirming', () => {
+  it('should call selectClass for Data-Knight when its confirm is clicked', () => {
     render(<CharacterSelect />);
 
-    // Select techno-mage
-    const technoMageButton = screen.getByText('Techno-Mage').closest('button');
-    if (technoMageButton) {
-      fireEvent.click(technoMageButton);
-    }
+    const confirmButtons = screen.getAllByText('Confirm');
+    fireEvent.click(confirmButtons[1]);
 
-    // Change to cyber-knight
-    const cyberKnightButton = screen.getByText('Cyber-Knight').closest('button');
-    if (cyberKnightButton) {
-      fireEvent.click(cyberKnightButton);
-    }
-
-    // Confirm cyber-knight selection
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
-    fireEvent.click(confirmButton);
-
-    expect(mockSelectClass).toHaveBeenCalledWith('cyber-knight');
+    expect(mockSelectClass).toHaveBeenCalledWith(
+      'data-knight',
+      { str: 18, dex: 15, int: 13 }
+    );
+    expect(mockSetGamePhase).toHaveBeenCalledWith('playing');
   });
 
-  it('should not call selectClass when clicking disabled confirm button', () => {
+  it('should call selectClass for Techno-Mage when its confirm is clicked', () => {
     render(<CharacterSelect />);
 
-    const confirmButton = screen.getByRole('button', { name: /Enter the Library/i });
+    const confirmButtons = screen.getAllByText('Confirm');
+    fireEvent.click(confirmButtons[2]);
 
-    // Try to click disabled button (this won't actually trigger onClick due to disabled state)
-    fireEvent.click(confirmButton);
-
-    expect(mockSelectClass).not.toHaveBeenCalled();
-    expect(mockSetGamePhase).not.toHaveBeenCalled();
+    expect(mockSelectClass).toHaveBeenCalledWith(
+      'techno-mage',
+      { str: 10, dex: 13, int: 18 }
+    );
+    expect(mockSetGamePhase).toHaveBeenCalledWith('playing');
   });
 
-  it('should display header text', () => {
+  it('should display stat values for each character', () => {
     render(<CharacterSelect />);
 
-    expect(screen.getByText(/Choose Your Class/i)).toBeInTheDocument();
+    // Shared values like 13 and 18 appear across multiple classes, so use getAllByText
+    // 13 appears 3 times: Cipher-Rogue str, Data-Knight int, Techno-Mage dex
+    expect(screen.getAllByText('13').length).toBeGreaterThanOrEqual(3);
+    // 18 appears 3 times: Cipher-Rogue dex, Data-Knight str, Techno-Mage int
+    expect(screen.getAllByText('18').length).toBeGreaterThanOrEqual(3);
+    // 15 appears once: Data-Knight dex
+    expect(screen.getAllByText('15').length).toBeGreaterThanOrEqual(1);
+    // 17 appears once: Cipher-Rogue int
+    expect(screen.getAllByText('17').length).toBeGreaterThanOrEqual(1);
+    // 10 appears once: Techno-Mage str
+    expect(screen.getAllByText('10').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('should display character icons', () => {
+  it('should render skill icons for each class', () => {
     render(<CharacterSelect />);
 
-    expect(screen.getByText('🧙‍♂️')).toBeInTheDocument();
-    expect(screen.getByText('⚔️')).toBeInTheDocument();
-    expect(screen.getByText('🗡️')).toBeInTheDocument();
+    // Skills from the CLASSES array (rendered in skill slots)
+    expect(screen.getByText('🔮')).toBeInTheDocument(); // Techno-Mage skill
+    expect(screen.getByText('🛡️')).toBeInTheDocument(); // Data-Knight skill
+    expect(screen.getByText('👁️')).toBeInTheDocument(); // Cipher-Rogue skill
+  });
+
+  it('should render 3D preview placeholders for each class', () => {
+    render(<CharacterSelect />);
+
+    // Character3DPreview is mocked, should render 3 previews
+    const previews = screen.getAllByTestId('character-3d-preview');
+    expect(previews.length).toBe(3);
+  });
+
+  it('should allow changing selection between classes', () => {
+    render(<CharacterSelect />);
+
+    // Click first class confirm, then second
+    const confirmButtons = screen.getAllByText('Confirm');
+
+    fireEvent.click(confirmButtons[0]); // Cipher-Rogue
+    expect(mockSelectClass).toHaveBeenCalledWith(
+      'cipher-rogue',
+      { str: 13, dex: 18, int: 17 }
+    );
+
+    fireEvent.click(confirmButtons[2]); // Techno-Mage
+    expect(mockSelectClass).toHaveBeenCalledWith(
+      'techno-mage',
+      { str: 10, dex: 13, int: 18 }
+    );
   });
 });

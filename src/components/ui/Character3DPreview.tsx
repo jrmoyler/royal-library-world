@@ -106,7 +106,7 @@ export default function Character3DPreview({
   characterClass,
   color,
   isSelected = false,
-  isHovered = false,
+  isHovered: _isHovered = false,
 }: Character3DPreviewProps) {
   return (
     <div

@@ -16,6 +16,8 @@ const customJestConfig = {
     '**/__tests__/**/*.{ts,tsx}',
     '**/*.{spec,test}.{ts,tsx}'
   ],
+  // Exclude Playwright e2e tests from Jest — they use a different runner
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

@@ -53,7 +53,7 @@ interface CharacterModelProps {
 export function TechnoMageModel({
   position = [0, 0, 0],
   animationState = 'idle',
-  movementDirection = new THREE.Vector3()
+  movementDirection: _movementDirection = new THREE.Vector3()
 }: CharacterModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const orb1Ref = useRef<THREE.Mesh>(null);
@@ -326,7 +326,7 @@ export function TechnoMageModel({
 export function CyberKnightModel({
   position = [0, 0, 0],
   animationState = 'idle',
-  movementDirection = new THREE.Vector3()
+  movementDirection: _movementDirection = new THREE.Vector3()
 }: CharacterModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const sword1Ref = useRef<THREE.Group>(null);
@@ -713,7 +713,7 @@ export function CyberKnightModel({
 export function ShadowAgentModel({
   position = [0, 0, 0],
   animationState = 'idle',
-  movementDirection = new THREE.Vector3()
+  movementDirection: _movementDirection = new THREE.Vector3()
 }: CharacterModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const dagger1Ref = useRef<THREE.Group>(null);

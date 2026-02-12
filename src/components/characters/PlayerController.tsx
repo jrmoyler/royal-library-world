@@ -35,7 +35,7 @@ export default function PlayerController() {
 
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const isLocked = useRef(false);
-  const cameraOffset = useRef(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE));
+  const _cameraOffset = useRef(new THREE.Vector3(0, CAMERA_HEIGHT, CAMERA_DISTANCE));
   const currentCameraPosition = useRef(new THREE.Vector3());
   const targetRotation = useRef(0);
 
